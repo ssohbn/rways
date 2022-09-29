@@ -3,9 +3,9 @@ use speedy2d::Window;
 use speedy2d::window::{WindowHandler, WindowHelper};
 use speedy2d::dimen::Vec2;
 
-const BOARD_WIDTH: usize = 500;
-const BOARD_HEIGHT: usize = 500;
-const CHANCE: u32 = 8;
+const BOARD_WIDTH: usize = 1000;
+const BOARD_HEIGHT: usize = 1000;
+const CHANCE: u32 = 4;
 
 const WINDOW_WIDTH: u32 = 1000;
 const WINDOW_HEIGHT: u32 = 1000;
