@@ -3,12 +3,12 @@ use speedy2d::Window;
 use speedy2d::window::{WindowHandler, WindowHelper};
 use speedy2d::dimen::Vec2;
 
-const BOARD_WIDTH: usize = 1920;
-const BOARD_HEIGHT: usize = 1080;
+const BOARD_WIDTH: usize = 500;
+const BOARD_HEIGHT: usize = 500;
 const CHANCE: u32 = 8;
 
-const WINDOW_WIDTH: u32 = 1920;
-const WINDOW_HEIGHT: u32 = 1080;
+const WINDOW_WIDTH: u32 = 1000;
+const WINDOW_HEIGHT: u32 = 1000;
 
 fn main() {
     let mut board = new_board(BOARD_WIDTH, BOARD_HEIGHT);
@@ -68,7 +68,7 @@ fn draw_board(updated_life: Vec<(u32, u32)>, updated_death: Vec<(u32, u32)>, gra
 
         graphics.draw_rectangle(
             speedy2d::shape::Rectangle::new(tl, br),
-            speedy2d::color::Color::BLACK,
+            speedy2d::color::Color::GREEN,
         );
     }
 
