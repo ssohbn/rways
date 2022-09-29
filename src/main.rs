@@ -1,42 +1,86 @@
 use rand::prelude::*;
+use speedy2d::Window;
+use speedy2d::window::{WindowHandler, WindowHelper};
+use speedy2d::dimen::Vec2;
 
-const WIDTH: usize = 15;
-const HEIGHT: usize = 15;
+const BOARD_WIDTH: usize = 1920;
+const BOARD_HEIGHT: usize = 1080;
 const CHANCE: u32 = 8;
 
-fn main() {
-    let mut board = new_board(WIDTH, HEIGHT);
+const WINDOW_WIDTH: u32 = 1920;
+const WINDOW_HEIGHT: u32 = 1080;
 
+fn main() {
+    let mut board = new_board(BOARD_WIDTH, BOARD_HEIGHT);
     if CHANCE != 0 {
-        for _ in 0..((WIDTH * HEIGHT) as u32 / CHANCE) {
+        for _ in 0..((BOARD_WIDTH * BOARD_HEIGHT) as u32 / CHANCE) {
             let mut rng = rand::thread_rng();
-            let x: u32  = rng.gen_range(0..(WIDTH as u32));
-            let y: u32  = rng.gen_range(0..(WIDTH as u32));
+            let x: u32  = rng.gen_range(0..(BOARD_WIDTH as u32));
+            let y: u32  = rng.gen_range(0..(BOARD_HEIGHT as u32));
             birth(&mut board, x, y)
         }
     }
 
-    let (life, death) = check_cells(&board);
-    let (updated_life, updated_death) = purge(&mut board, life, death);
-    draw_board(&board, updated_life, updated_death);
+    let window = Window::new_centered("rways", (WINDOW_WIDTH, WINDOW_HEIGHT)).unwrap();
+    let mywindow = ConwaysWindow::new(board, (WINDOW_WIDTH, WINDOW_HEIGHT), (BOARD_WIDTH, BOARD_HEIGHT));
+
+    window.run_loop(mywindow);
+}
+
+struct ConwaysWindow {
+    board: Vec<Vec<Cell>>,
+    window_dimensions: (u32, u32),
+    board_dimensions: (usize, usize),
+}
+
+impl ConwaysWindow {
+    fn new(board: Vec<Vec<Cell>>, window_dimensions: (u32, u32), board_dimensions : (usize, usize) ) -> ConwaysWindow {
+        ConwaysWindow { board, window_dimensions, board_dimensions }
+    }
+}
+
+impl WindowHandler for ConwaysWindow {
+    fn on_draw(
+        &mut self,
+        helper: &mut WindowHelper<()>,
+        graphics: &mut speedy2d::Graphics2D
+    ) {
+        let (life, death) = check_cells(&self.board);
+        let (updated_life, updated_death) = purge(&mut self.board, life, death);
+
+        let cell_width = self.window_dimensions.0/self.board_dimensions.0 as u32;
+        let cell_height = self.window_dimensions.1/self.board_dimensions.1 as u32;
+
+        draw_board(updated_life, updated_death, graphics, (cell_width, cell_height));
+
+        
+        helper.request_redraw();
+    }
 
 }
 
-fn draw_board( cells: &Vec<Vec<Cell>>, _updated_life: Vec<(u32, u32)>, _updated_death: Vec<(u32, u32)>) {
-    for row in cells {
-        for cell in row {
 
-            if matches!(cell.state, CellState::ALIVE) {
-                print!("#", )
-            } else {
-                print!(" ", )
+fn draw_board(updated_life: Vec<(u32, u32)>, updated_death: Vec<(u32, u32)>, graphics: &mut speedy2d::Graphics2D, cell_dim: (u32, u32)) {
 
-            }
-        }
+    for cell in updated_life {
+        let tl = Vec2::new((cell.0 * cell_dim.0) as f32, (cell.1 * cell_dim.1) as f32);
+        let br = Vec2::new((cell.0 * cell_dim.0 + cell_dim.0) as f32, (cell.1 * cell_dim.1 + cell_dim.1) as f32);
 
-        println!();
+        graphics.draw_rectangle(
+            speedy2d::shape::Rectangle::new(tl, br),
+            speedy2d::color::Color::BLACK,
+        );
     }
 
+    for cell in updated_death {
+        let tl = Vec2::new((cell.0 * cell_dim.0) as f32, (cell.1 * cell_dim.1) as f32);
+        let br = Vec2::new((cell.0 * cell_dim.0 + cell_dim.0) as f32, (cell.1 * cell_dim.1 + cell_dim.1) as f32);
+
+        graphics.draw_rectangle(
+            speedy2d::shape::Rectangle::new(tl, br),
+            speedy2d::color::Color::BLACK,
+        );
+    }
 }
 
 fn check_cells(cells: &Vec<Vec<Cell>>) -> (Vec<(u32,u32)>, Vec<(u32, u32)>) {
@@ -66,7 +110,7 @@ fn birth(cells: &mut Vec<Vec<Cell>>, x: u32, y: u32) {
             let nx = neighbor_pos.0;
             let ny = neighbor_pos.1;
 
-            let (nx, ny) = wrap_board(nx, ny, cells.len(), cells.get(0).unwrap().len());
+            let (nx, ny) = wrap_board(nx, ny, cells.get(0).unwrap().len(), cells.len());
             cells.get_mut(ny as usize).unwrap().get_mut(nx as usize).unwrap().inc_neighbors();
         }
     }
@@ -80,7 +124,7 @@ fn kill(cells: &mut Vec<Vec<Cell>>, x: u32, y: u32) {
             let nx = neighbor_pos.0;
             let ny = neighbor_pos.1;
 
-            let (nx, ny) = wrap_board(nx, ny, cells.len(), cells.get(0).unwrap().len());
+            let (nx, ny) = wrap_board(nx, ny, cells.get(0).unwrap().len(), cells.len());
             cells.get_mut(ny as usize).unwrap().get_mut(nx as usize).unwrap().dec_neighbors();
         }
     }
@@ -172,10 +216,6 @@ struct Cell {
 impl Cell {
     fn new(x: u32, y: u32, neighbors: u32, state: CellState) -> Cell {
         Cell { x , y, neighbors, state }
-    }
-
-    fn read_coords(&self) -> (u32, u32){
-        (self.x, self.y)
     }
 
     fn inc_neighbors(&mut self) {
