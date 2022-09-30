@@ -3,8 +3,8 @@ use speedy2d::Window;
 use speedy2d::window::{WindowHandler, WindowHelper};
 use speedy2d::dimen::Vec2;
 
-const BOARD_WIDTH: usize = 250;
-const BOARD_HEIGHT: usize = 250;
+const BOARD_WIDTH: usize = 1000;
+const BOARD_HEIGHT: usize = 1000;
 const CHANCE: u32 = 4;
 
 const WINDOW_WIDTH: u32 = 1000;
@@ -56,14 +56,6 @@ impl WindowHandler for ConwaysWindow {
         
         helper.request_redraw();
     }
-
-    fn on_mouse_button_down(
-        &mut self,
-        helper: &mut WindowHelper<()>,
-        button: speedy2d::window::MouseButton
-    ) {
-        // the j
-    }
 }
 
 
@@ -94,15 +86,16 @@ fn check_cells(cells: &Vec<Cell>) -> (Vec<(u32,u32)>, Vec<(u32, u32)>) {
     let mut life: Vec<(u32, u32)> = Vec::new();
     let mut death: Vec<(u32, u32)> = Vec::new();
     
-    for row in cells {
-        for cell in row {
+    for y in 0..BOARD_HEIGHT {
+        for x in 0..BOARD_WIDTH {
+            let cell = cells.get(BOARD_HEIGHT as usize * y + x).unwrap();
             if cell.neighbors == 3 {
-                life.push((cell.x, cell.y));
+                life.push((x as u32, y as u32));
             } else if matches!(cell.state, CellState::ALIVE) {
                 if cell.neighbors == 2 {
-                    life.push((cell.x, cell.y))
+                    life.push((x as u32, y as u32))
                 } else {
-                    death.push((cell.x, cell.y));
+                    death.push((x as u32, y as u32));
                 }
             }
         }
@@ -112,31 +105,31 @@ fn check_cells(cells: &Vec<Cell>) -> (Vec<(u32,u32)>, Vec<(u32, u32)>) {
 }
 
 fn birth(cells: &mut Vec<Cell>, x: u32, y: u32) {
-    if matches!(cells.get(y as usize).unwrap().get(x as usize).unwrap().state, CellState::DEAD) {
-        for neighbor_pos in neighboring_positions(x, y, cells.get(y as usize).unwrap().len(), cells.len()) {
+    if matches!(cells.get((BOARD_HEIGHT as u32 * y + x) as usize).unwrap().state, CellState::DEAD) {
+        for neighbor_pos in neighboring_positions(x, y, BOARD_WIDTH, BOARD_HEIGHT) {
             let nx = neighbor_pos.0;
             let ny = neighbor_pos.1;
 
-            let (nx, ny) = wrap_board(nx, ny, cells.get(0).unwrap().len(), cells.len());
-            cells.get_mut(ny as usize).unwrap().get_mut(nx as usize).unwrap().inc_neighbors();
+            let (nx, ny) = wrap_board(nx, ny, BOARD_WIDTH, BOARD_HEIGHT);
+            cells.get_mut((BOARD_HEIGHT as u32 * ny + nx) as usize).unwrap().inc_neighbors();
         }
     }
 
-    cells.get_mut(y as usize).unwrap().get_mut(x as usize).unwrap().state = CellState::ALIVE;
+    cells.get_mut((BOARD_HEIGHT as u32 * y + x) as usize).unwrap().state = CellState::ALIVE;
 }
 
 fn kill(cells: &mut Vec<Cell>, x: u32, y: u32) {
-    if matches!(cells.get(y as usize).unwrap().get(x as usize).unwrap().state, CellState::ALIVE) {
-        for neighbor_pos in neighboring_positions(x, y, cells.get(y as usize).unwrap().len(), cells.len()) {
+    if matches!(cells.get((BOARD_HEIGHT as u32 * y + x) as usize).unwrap().state, CellState::ALIVE) {
+        for neighbor_pos in neighboring_positions(x, y, BOARD_WIDTH, BOARD_HEIGHT) {
             let nx = neighbor_pos.0;
             let ny = neighbor_pos.1;
 
-            let (nx, ny) = wrap_board(nx, ny, cells.get(0).unwrap().len(), cells.len());
-            cells.get_mut(ny as usize).unwrap().get_mut(nx as usize).unwrap().dec_neighbors();
+            let (nx, ny) = wrap_board(nx, ny, BOARD_WIDTH, BOARD_HEIGHT);
+            cells.get_mut((BOARD_HEIGHT as u32 * ny + nx) as usize).unwrap().dec_neighbors();
         }
     }
 
-    cells.get_mut(y as usize).unwrap().get_mut(x as usize).unwrap().state = CellState::DEAD;
+    cells.get_mut((BOARD_HEIGHT as u32 * y + x ) as usize).unwrap().state = CellState::DEAD;
 }
 
 fn purge(cells: &mut Vec<Cell>, life: Vec<(u32, u32)>,  death: Vec<(u32, u32)>) -> (Vec<(u32, u32)>, Vec<(u32, u32)>){
@@ -146,7 +139,7 @@ fn purge(cells: &mut Vec<Cell>, life: Vec<(u32, u32)>,  death: Vec<(u32, u32)>) 
     for cell in death {
         let x = cell.0;
         let y = cell.1;
-        if matches!(cells.get(y as usize).unwrap().get(x as usize).unwrap().state, CellState::ALIVE) {
+        if matches!(cells.get((BOARD_HEIGHT as u32 * y + x) as usize).unwrap().state, CellState::ALIVE) {
             changed_death.push((x, y));
         }
 
@@ -158,7 +151,7 @@ fn purge(cells: &mut Vec<Cell>, life: Vec<(u32, u32)>,  death: Vec<(u32, u32)>) 
         let x = cell.0;
         let y = cell.1;
 
-        if matches!(cells.get(y as usize).unwrap().get(x as usize).unwrap().state, CellState::DEAD) {
+        if matches!(cells.get((BOARD_HEIGHT as u32 * y + x) as usize).unwrap().state, CellState::DEAD) {
             changed_life.push((x, y));
         }
 
@@ -171,13 +164,8 @@ fn purge(cells: &mut Vec<Cell>, life: Vec<(u32, u32)>,  death: Vec<(u32, u32)>) 
 fn new_board(width: usize, height: usize) -> Vec<Cell> {
     let mut board = Vec::new();
 
-    for y in 0..height {
-        let mut row = Vec::new();
-        for x in 0..width {
-            row.push( Cell::new(x as u32, y as u32, 0, CellState::DEAD) );
-    
-        };
-        board.push(row);
+    for _ in 0..(height * width) {
+            board.push( Cell::new(0, CellState::DEAD) );
     };
 
     board
@@ -214,15 +202,13 @@ fn neighboring_positions(x: u32, y: u32, width: usize, height: usize) -> Vec<(u3
 
 #[derive(Debug)]
 struct Cell {
-    x: u32,
-    y: u32,
     neighbors: u32,
     state: CellState,
 }
 
 impl Cell {
-    fn new(x: u32, y: u32, neighbors: u32, state: CellState) -> Cell {
-        Cell { x , y, neighbors, state }
+    fn new(neighbors: u32, state: CellState) -> Cell {
+        Cell { neighbors, state }
     }
 
     fn inc_neighbors(&mut self) {
@@ -230,7 +216,10 @@ impl Cell {
     }
 
     fn dec_neighbors(&mut self) {
-        self.neighbors -= 1;
+        if self.neighbors != 0 {
+            self.neighbors -= 1;
+
+        }
     }
 }
 
