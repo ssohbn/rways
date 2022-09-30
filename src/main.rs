@@ -28,13 +28,13 @@ fn main() {
 }
 
 struct ConwaysWindow {
-    board: Vec<Vec<Cell>>,
+    board: Vec<Cell>,
     window_dimensions: (u32, u32),
     board_dimensions: (usize, usize),
 }
 
 impl ConwaysWindow {
-    fn new(board: Vec<Vec<Cell>>, window_dimensions: (u32, u32), board_dimensions : (usize, usize) ) -> ConwaysWindow {
+    fn new(board: Vec<Cell>, window_dimensions: (u32, u32), board_dimensions : (usize, usize) ) -> ConwaysWindow {
         ConwaysWindow { board, window_dimensions, board_dimensions }
     }
 }
@@ -90,7 +90,7 @@ fn draw_board(updated_life: Vec<(u32, u32)>, updated_death: Vec<(u32, u32)>, gra
     }
 }
 
-fn check_cells(cells: &Vec<Vec<Cell>>) -> (Vec<(u32,u32)>, Vec<(u32, u32)>) {
+fn check_cells(cells: &Vec<Cell>) -> (Vec<(u32,u32)>, Vec<(u32, u32)>) {
     let mut life: Vec<(u32, u32)> = Vec::new();
     let mut death: Vec<(u32, u32)> = Vec::new();
     
@@ -111,7 +111,7 @@ fn check_cells(cells: &Vec<Vec<Cell>>) -> (Vec<(u32,u32)>, Vec<(u32, u32)>) {
     (life, death)
 }
 
-fn birth(cells: &mut Vec<Vec<Cell>>, x: u32, y: u32) {
+fn birth(cells: &mut Vec<Cell>, x: u32, y: u32) {
     if matches!(cells.get(y as usize).unwrap().get(x as usize).unwrap().state, CellState::DEAD) {
         for neighbor_pos in neighboring_positions(x, y, cells.get(y as usize).unwrap().len(), cells.len()) {
             let nx = neighbor_pos.0;
@@ -125,7 +125,7 @@ fn birth(cells: &mut Vec<Vec<Cell>>, x: u32, y: u32) {
     cells.get_mut(y as usize).unwrap().get_mut(x as usize).unwrap().state = CellState::ALIVE;
 }
 
-fn kill(cells: &mut Vec<Vec<Cell>>, x: u32, y: u32) {
+fn kill(cells: &mut Vec<Cell>, x: u32, y: u32) {
     if matches!(cells.get(y as usize).unwrap().get(x as usize).unwrap().state, CellState::ALIVE) {
         for neighbor_pos in neighboring_positions(x, y, cells.get(y as usize).unwrap().len(), cells.len()) {
             let nx = neighbor_pos.0;
@@ -139,7 +139,7 @@ fn kill(cells: &mut Vec<Vec<Cell>>, x: u32, y: u32) {
     cells.get_mut(y as usize).unwrap().get_mut(x as usize).unwrap().state = CellState::DEAD;
 }
 
-fn purge(cells: &mut Vec<Vec<Cell>>, life: Vec<(u32, u32)>,  death: Vec<(u32, u32)>) -> (Vec<(u32, u32)>, Vec<(u32, u32)>){
+fn purge(cells: &mut Vec<Cell>, life: Vec<(u32, u32)>,  death: Vec<(u32, u32)>) -> (Vec<(u32, u32)>, Vec<(u32, u32)>){
     let mut changed_life: Vec<(u32, u32)> = Vec::new();
     let mut changed_death: Vec<(u32, u32)> = Vec::new();
 
@@ -168,7 +168,7 @@ fn purge(cells: &mut Vec<Vec<Cell>>, life: Vec<(u32, u32)>,  death: Vec<(u32, u3
     (changed_life, changed_death)
 }
 
-fn new_board(width: usize, height: usize) -> Vec<Vec<Cell>> {
+fn new_board(width: usize, height: usize) -> Vec<Cell> {
     let mut board = Vec::new();
 
     for y in 0..height {
