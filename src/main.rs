@@ -57,6 +57,14 @@ impl WindowHandler for ConwaysWindow {
         helper.request_redraw();
     }
 
+    fn on_mouse_button_down(
+        &mut self,
+        helper: &mut WindowHelper<()>,
+        button: speedy2d::window::MouseButton
+    ) {
+        // the j
+
+    }
 }
 
 
